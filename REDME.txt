@@ -1,0 +1,18 @@
+tabelas utilizadas no Banco de Dados
+CREATE TABLE usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL
+    avatar VARCHAR(255) NULL,
+);
+
+CREATE TABLE produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
+    categoria VARCHAR(100) NOT NULL,
+    descricao TEXT NOT NULL,
+    imagem VARCHAR(255) NOT NULL
+);
+
