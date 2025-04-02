@@ -12,16 +12,14 @@ if (isset($_GET['id'])) {
     $id = intval($_GET['id']); // Converte o ID para um inteiro para segurança
 
     // Busca o produto pelo ID
-    $sql = "SELECT * FROM produtos WHERE id = ?";
+    $sql = "SELECT * FROM produtos WHERE id = :id";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $produto = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Verifica se o produto foi encontrado
-    if ($result->num_rows > 0) {
-        $produto = $result->fetch_assoc();
-    } else {
+    if (!$produto) {
         echo "<p>Produto não encontrado.</p>";
         exit();
     }
@@ -97,14 +95,8 @@ if (isset($_GET['id'])) {
                 </div>
             </div>
             <div class="footer-bottom">
-                <div class="footer-bottom--left">
-                   
-                </div>
                 <div>
                     &copy; 2025 FeiraGreen. Todos os direitos reservados.
-                </div>
-                <div class="footer-bottom--right">
-                    
                 </div>
             </div>
         </div>

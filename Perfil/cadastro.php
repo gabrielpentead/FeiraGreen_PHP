@@ -4,30 +4,35 @@ include("../Conexao/conexao.php");
 $erro = ""; // Inicializa variável de erro
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome = $_POST["nome"];
-    $email = $_POST["email"];
+    $nome = trim($_POST["nome"]);
+    $email = trim($_POST["email"]);
     $senha = password_hash($_POST["senha"], PASSWORD_DEFAULT);
 
-    // Verifica se o email já está cadastrado
-    $consulta = $conn->prepare("SELECT * FROM usuarios WHERE email = ?");
-    $consulta->bind_param("s", $email); // Associa o email a ? / o 'S' indica uma string
-    $consulta->execute();
-    $resultado = $consulta->get_result();
+    try {
+        // Verifica se o e-mail já existe no banco de dados
+        $consulta = $conn->prepare("SELECT id FROM usuarios WHERE email = :email");
+        $consulta->bindParam(":email", $email, PDO::PARAM_STR);
+        $consulta->execute();
 
-    if ($resultado->num_rows > 0) {
-        $erro = "Este email já está cadastrado. Tente outro.";
-    } else {
-        $insercao = $conn->prepare("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)");
-        $insercao->bind_param("sss", $nome, $email, $senha);
-
-        if ($insercao->execute()) {
-            header("Location: login.php?sucesso=1");
-            exit();
+        if ($consulta->rowCount() > 0) {
+            $erro = "Este e-mail já está cadastrado. Tente outro.";
         } else {
-            $erro = "Erro ao cadastrar: " . $insercao->error;
+            // Insere o novo usuário
+            $insercao = $conn->prepare("INSERT INTO usuarios (nome, email, senha) VALUES (:nome, :email, :senha)");
+            $insercao->bindParam(":nome", $nome, PDO::PARAM_STR);
+            $insercao->bindParam(":email", $email, PDO::PARAM_STR);
+            $insercao->bindParam(":senha", $senha, PDO::PARAM_STR);
+
+            if ($insercao->execute()) {
+                header("Location: login.php?sucesso=1");
+                exit();
+            } else {
+                $erro = "Erro ao cadastrar. Tente novamente.";
+            }
         }
+    } catch (PDOException $e) {
+        $erro = "Erro no banco de dados: " . $e->getMessage();
     }
-    $consulta->close();
 }
 ?>
 
@@ -49,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- Exibe mensagem de erro -->
             <?php if(!empty($erro)): ?>
-                <div class="error"><?= $erro ?></div>
+                <div class="error"><?= htmlspecialchars($erro) ?></div>
             <?php endif; ?>
 
             <form method="post" action="cadastro.php">

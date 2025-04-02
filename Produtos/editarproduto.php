@@ -7,7 +7,6 @@ if (!isset($_SESSION["id"])) {
     exit();
 }
 
-// Verifica se um ID de produto foi passado via GET
 if (!isset($_GET["id"])) {
     echo "Produto não encontrado.";
     exit();
@@ -15,52 +14,52 @@ if (!isset($_GET["id"])) {
 
 $id_produto = $_GET["id"];
 
-// Busca os dados do produto no banco
-$sql = "SELECT * FROM produtos WHERE id = '$id_produto'";
-$result = $conn->query($sql);
+try {
+    $stmt = $conn->prepare("SELECT * FROM produtos WHERE id = :id");
+    $stmt->bindParam(":id", $id_produto, PDO::PARAM_INT);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows == 0) {
-    echo "Produto não encontrado.";
-    exit();
-}
+    if (!$row) {
+        echo "Produto não encontrado.";
+        exit();
+    }
 
-$row = $result->fetch_assoc();
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $nome = $_POST["nome"];
+        $preco = $_POST["preco"];
+        $categoria = $_POST["categoria"];
+        $descricao = $_POST["descricao"];
+        $imagemNome = $row["imagem"];
 
-// Se o formulário for enviado, atualiza os dados
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome = $_POST["nome"];
-    $preco = $_POST["preco"];
-    $categoria = $_POST["categoria"];
-    $descricao = $_POST["descricao"];
-    $imagemNome = $row["imagem"]; 
+        if (!empty($_FILES["imagem"]["name"])) {
+            $imagem = $_FILES["imagem"];
+            $imagemNome = uniqid() . "-" . basename($imagem["name"]);
+            $imagemDestino = "../Produtos/uploads/" . $imagemNome;
+            
+            if (!move_uploaded_file($imagem["tmp_name"], $imagemDestino)) {
+                echo "Falha ao enviar o arquivo.";
+                exit();
+            }
+        }
 
-    if (!empty($_FILES["imagem"]["name"])) {
-        $imagem = $_FILES["imagem"];
-        $imagemNome = uniqid() . "-" . basename($imagem["name"]);
-        // Defina o mesmo caminho para upload e para exibição
-        $imagemDestino = "../Produtos/uploads/" . $imagemNome;
-        
-        if (!move_uploaded_file($imagem["tmp_name"], $imagemDestino)) {
-            echo "Falha ao enviar o arquivo.";
+        $stmt = $conn->prepare("UPDATE produtos SET nome = :nome, preco = :preco, categoria = :categoria, descricao = :descricao, imagem = :imagem WHERE id = :id");
+        $stmt->bindParam(":nome", $nome);
+        $stmt->bindParam(":preco", $preco);
+        $stmt->bindParam(":categoria", $categoria);
+        $stmt->bindParam(":descricao", $descricao);
+        $stmt->bindParam(":imagem", $imagemNome);
+        $stmt->bindParam(":id", $id_produto, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            header("Location: produtos.php");
             exit();
+        } else {
+            echo "Erro ao atualizar produto.";
         }
     }
-    
-    // Atualiza o produto no banco
-    $sql = "UPDATE produtos SET 
-                nome = '$nome', 
-                preco = '$preco', 
-                categoria = '$categoria', 
-                descricao = '$descricao', 
-                imagem = '$imagemNome' 
-            WHERE id = '$id_produto'";
-
-    if ($conn->query($sql) === TRUE) {
-        header("Location: produtos.php"); 
-        exit();
-    } else {
-        echo "Erro ao atualizar produto: " . $conn->error;
-    }
+} catch (PDOException $e) {
+    echo "Erro: " . $e->getMessage();
 }
 ?>
 

@@ -7,9 +7,14 @@ if (!isset($_SESSION["id"])) {
 
 include("../Conexao/conexao.php");
 
-// Listando produtos
-$sql = "SELECT * FROM produtos";
-$result = $conn->query($sql);
+try {
+    // Preparando a consulta para listar os produtos
+    $stmt = $conn->prepare("SELECT * FROM produtos");
+    $stmt->execute();
+    $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Erro ao buscar produtos: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -46,61 +51,59 @@ $result = $conn->query($sql);
     <a href="addproduto.php"><button type="button">Adicionar Produto</button></a>
 </div>
 <div class="container-principal">
-        <?php
-        if ($result && $result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                echo "<div class='produto-container-principal'>";
-                echo "<div class='produto-principal'>";
-                echo "<a href='editproduto.php?id=" . $row['id'] . "' aria-label='Ver detalhes do produto " . htmlspecialchars($row['nome']) . "'>";
-                echo "<img src='uploads/" . htmlspecialchars($row['imagem']) . "' alt='" . htmlspecialchars($row['nome']) . "' class='img-fluid' onerror=\"this.onerror=null; this.src='/path/to/default/image.jpg';\" />";
-                echo "</a>";
-                echo "<span>" . htmlspecialchars($row['nome']) . "</span>";
-                echo "<span>R$ <span class='price'>" . number_format($row['preco'], 2, ',', '.') . "</span><br>";
-                echo "<span class='unit'>" . htmlspecialchars($row['categoria']) . "</span>";
-                echo "<div class='button-group'>";
-                echo "<button type='button' class='edit-btn' onclick=\"location.href='editarproduto.php?id=" . $row['id'] . "'\">Editar</button>";
-                echo "<button type='button' class='delete-btn' onclick=\"location.href='excluirproduto.php?id=" . $row['id'] . "'\">Excluir</button>";
-                echo "</div>";
-                echo "</div></div>";
-            }
-        } else {
-            echo "<div class='produto-container-principal'><p>Nenhum produto encontrado.</p></div>";
-        }
-        ?>
+    <?php if (!empty($produtos)): ?>
+        <?php foreach ($produtos as $produto): ?>
+            <div class='produto-container-principal'>
+                <div class='produto-principal'>
+                    <a href='editproduto.php?id=<?= $produto['id'] ?>' aria-label='Ver detalhes do produto <?= htmlspecialchars($produto['nome']) ?>'>
+                        <img src='uploads/<?= htmlspecialchars($produto['imagem']) ?>' alt='<?= htmlspecialchars($produto['nome']) ?>' class='img-fluid' onerror="this.onerror=null; this.src='/path/to/default/image.jpg';" />
+                    </a>
+                    <span><?= htmlspecialchars($produto['nome']) ?></span>
+                    <span>R$ <span class='price'><?= number_format($produto['preco'], 2, ',', '.') ?></span><br>
+                    <span class='unit'><?= htmlspecialchars($produto['categoria']) ?></span>
+                    <div class='button-group'>
+                        <button type='button' class='edit-btn' onclick="location.href='editarproduto.php?id=<?= $produto['id'] ?>'">Editar</button>
+                        <button type='button' class='delete-btn' onclick="location.href='excluirproduto.php?id=<?= $produto['id'] ?>'">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <div class='produto-container-principal'><p>Nenhum produto encontrado.</p></div>
+    <?php endif; ?>
 </div>
 </body>
 <footer>
     <div class="footer">
-    <div class="footer-top">
-        <div class="footer-top--left">
-            <a href="#">Contato</a>
-            <a href="#">Termos de Serviço</a>
-            <a href="#">Política de Privacidade</a>
-            <a href="#">Cancelamento, Troca e Reembolso</a>
-        </div>
-        <div class="footer-top--right">
-            <span>Boletim de Notícias</span>
-            <div class="footer-news-letter">
-                <input class="footer-input" type="email" placeholder="Digite o seu e-mail">
-                <button class="footer-button" type="button">Inscrever</button>
+        <div class="footer-top">
+            <div class="footer-top--left">
+                <a href="#">Contato</a>
+                <a href="#">Termos de Serviço</a>
+                <a href="#">Política de Privacidade</a>
+                <a href="#">Cancelamento, Troca e Reembolso</a>
+            </div>
+            <div class="footer-top--right">
+                <span>Boletim de Notícias</span>
+                <div class="footer-news-letter">
+                    <input class="footer-input" type="email" placeholder="Digite o seu e-mail">
+                    <button class="footer-button" type="button">Inscrever</button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div class="footer-bottom">
-        <div class="footer-bottom--left">
-            <a href="#"><img class="footer-image" src="assets/imagens/instagram.png" alt=""></a>
-            <a href="#"><img class="footer-image" src="assets/imagens/facebook.png" alt=""></a>
+        <div class="footer-bottom">
+            <div class="footer-bottom--left">
+                <a href="#"><img class="footer-image" src="assets/imagens/instagram.png" alt=""></a>
+                <a href="#"><img class="footer-image" src="assets/imagens/facebook.png" alt=""></a>
+            </div>
+            <div>
+                &copy; 2025 FeiraGreen. Todos os direitos reservados.
+            </div>
+            <div class="footer-bottom--right">
+                <img class="footer-image" src="assets/imagens/mastercard.png" alt="">
+                <img class="footer-image" src="assets/imagens/paypal.png" alt="">
+                <img class="footer-image" src="assets/imagens/visa.png" alt="">
+            </div>
         </div>
-        <div>
-            &copy; 2025 FeiraGreen. Todos os direitos reservados.
-        </div>
-        <div class="footer-bottom--right">
-            <img class="footer-image" src="assets/imagens/mastercard.png" alt="">
-            <img class="footer-image" src="assets/imagens/paypal.png" alt="">
-            <img class="footer-image" src="assets/imagens/visa.png" alt="">
-        </div>
-    </div>
     </div>
 </footer>
 </html>

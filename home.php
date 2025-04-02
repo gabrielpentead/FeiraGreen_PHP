@@ -9,8 +9,9 @@ include("Conexao/conexao.php");
 
 // Listando produtos
 $sql = "SELECT * FROM produtos";
-$result = $conn->query($sql);
-
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -59,8 +60,8 @@ $result = $conn->query($sql);
         <main class="produto-page">
     <div class="container-principal">
         <?php
-        if ($result && $result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
+        if (count($result) > 0) {
+            foreach ($result as $row) {
                 echo "<div class='produto-container-principal'>";
                 echo "<div class='produto-principal'>";
                 echo "<a href='paginapd.php?id=" . $row['id'] . "' aria-label='Ver detalhes do produto " . htmlspecialchars($row['nome']) . "'>";
@@ -115,4 +116,3 @@ $result = $conn->query($sql);
         </footer>
 </body>
 </html>
-

@@ -1,10 +1,5 @@
 <?php
-// Inicia a sessão apenas se não estiver ativa
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Inclui a conexão com o banco de dados
+session_start();
 require_once("../Conexao/conexao.php");
 
 class Usuario {
@@ -14,40 +9,58 @@ class Usuario {
         $this->conn = $conn;
     }
 
+    public function cadastrar($nome, $email, $senha) {
+        try {
+            // Verifica se o email já está cadastrado
+            $stmt = $this->conn->prepare("SELECT id FROM usuarios WHERE email = :email");
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                return "Este email já está cadastrado!";
+            }
+
+            // Insere o usuário com senha criptografada
+            $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+            $stmt = $this->conn->prepare("INSERT INTO usuarios (nome, email, senha) VALUES (:nome, :email, :senha)");
+            $stmt->bindParam(":nome", $nome, PDO::PARAM_STR);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+            $stmt->bindParam(":senha", $senhaHash, PDO::PARAM_STR);
+
+            return $stmt->execute() ? "Cadastro realizado com sucesso!" : "Erro ao cadastrar!";
+        } catch (PDOException $e) {
+            return "Erro no banco de dados: " . $e->getMessage();
+        }
+    }
+
     public function login($email, $senha) {
         try {
-            $stmt = $this->conn->prepare("SELECT id, nome, senha FROM usuarios WHERE email = :email");
+            $stmt = $this->conn->prepare("SELECT * FROM usuarios WHERE email = :email");
             $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->execute();
 
             if ($stmt->rowCount() > 0) {
                 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
                 if (password_verify($senha, $usuario["senha"])) {
                     $_SESSION["id"] = $usuario["id"];
                     $_SESSION["nome"] = $usuario["nome"];
                     return "sucesso";
-                } else {
-                    return "Senha incorreta!";
                 }
-            } else {
-                return "Usuário não encontrado!";
+                return "Senha incorreta!";
             }
+            return "Usuário não encontrado!";
         } catch (PDOException $e) {
             return "Erro no banco de dados: " . $e->getMessage();
         }
     }
 }
 
-$error = "";
-
-// Se o formulário for enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $usuario = new Usuario($conn);
-    $email = trim($_POST["email"]);
-    $senha = trim($_POST["senha"]);
+    $email = $_POST["email"];
+    $senha = $_POST["senha"];
     $resultado = $usuario->login($email, $senha);
-
+    
     if ($resultado === "sucesso") {
         header("Location: ../home.php");
         exit();

@@ -14,29 +14,31 @@ if (!isset($_GET["id"])) {
 
 $id_produto = $_GET["id"];
 
-// Busca os dados do produto no banco
-$sql = "SELECT * FROM produtos WHERE id = '$id_produto'";
-$result = $conn->query($sql);
+try {
+    // Preparar a consulta para buscar o produto
+    $stmt = $conn->prepare("SELECT imagem FROM produtos WHERE id = :id");
+    $stmt->bindParam(":id", $id_produto, PDO::PARAM_INT);
+    $stmt->execute();
+    $produto = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows == 0) {
-    echo "Produto não encontrado.";
+    if (!$produto) {
+        echo "Produto não encontrado.";
+        exit();
+    }
+
+    // Excluir a imagem do servidor, se existir
+    if (!empty($produto["imagem"]) && file_exists("../Perfil/uploads/" . $produto["imagem"])) {
+        unlink("../Perfil/uploads/" . $produto["imagem"]);
+    }
+
+    // Preparar a consulta para excluir o produto
+    $stmt = $conn->prepare("DELETE FROM produtos WHERE id = :id");
+    $stmt->bindParam(":id", $id_produto, PDO::PARAM_INT);
+    $stmt->execute();
+
+    header("Location: produtos.php");
     exit();
-}
-
-$row = $result->fetch_assoc();
-
-// Excluir a imagem do servidor
-if (!empty($row["imagem"]) && file_exists("../Perfil/uploads/" . $row["imagem"])) {
-    unlink("../Perfil/uploads/" . $row["imagem"]);
-}
-
-// Excluir o produto do banco de dados
-$sql_delete = "DELETE FROM produtos WHERE id = '$id_produto'";
-
-if ($conn->query($sql_delete) === TRUE) {
-    header("Location: produtos.php"); 
-    exit();
-} else {
-    echo "Erro ao excluir produto: " . $conn->error;
+} catch (PDOException $e) {
+    echo "Erro ao excluir produto: " . $e->getMessage();
 }
 ?>

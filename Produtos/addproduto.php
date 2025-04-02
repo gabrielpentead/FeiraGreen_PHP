@@ -16,22 +16,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $descricao = $_POST["descricao"];
     $imagem = $_FILES["imagem"];
 
-    // Verifica se o preço é um número válido e não negativo
     if (!is_numeric($preco) || $preco < 0) {
         $mensagem = "<p style='color: red;'>Erro: O preço deve ser um número positivo.</p>";
     } else {
-        // Upload da imagem
         $imagemNome = uniqid() . "-" . basename($imagem["name"]);
         $imagemDestino = "uploads/" . $imagemNome;
 
         if (move_uploaded_file($imagem["tmp_name"], $imagemDestino)) {
-            $sql = "INSERT INTO produtos (nome, preco, categoria, descricao, imagem) 
-                    VALUES ('$nome', '$preco', '$categoria', '$descricao', '$imagemNome')";
+            try {
+                $sql = "INSERT INTO produtos (nome, preco, categoria, descricao, imagem) VALUES (:nome, :preco, :categoria, :descricao, :imagem)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(':nome', $nome);
+                $stmt->bindParam(':preco', $preco);
+                $stmt->bindParam(':categoria', $categoria);
+                $stmt->bindParam(':descricao', $descricao);
+                $stmt->bindParam(':imagem', $imagemNome);
 
-            if ($conn->query($sql) === TRUE) {
-                $mensagem = "<p style='color: green;'>Produto adicionado com sucesso!</p>";
-            } else {
-                $mensagem = "<p style='color: red;'>Erro ao adicionar produto: " . $conn->error . "</p>";
+                if ($stmt->execute()) {
+                    $mensagem = "<p style='color: green;'>Produto adicionado com sucesso!</p>";
+                } else {
+                    $mensagem = "<p style='color: red;'>Erro ao adicionar produto.</p>";
+                }
+            } catch (PDOException $e) {
+                $mensagem = "<p style='color: red;'>Erro ao adicionar produto: " . $e->getMessage() . "</p>";
             }
         } else {
             $mensagem = "<p style='color: red;'>Erro ao fazer upload da imagem.</p>";
@@ -39,6 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt">

@@ -9,14 +9,13 @@ include("../Conexao/conexao.php");
 
 $id = $_SESSION["id"];
 
-$stmt = $conn->prepare("SELECT * FROM usuarios WHERE id = ?"); //Consulta preparada
-$stmt->bind_param("i", $id);
+$stmt = $conn->prepare("SELECT * FROM usuarios WHERE id = :id"); //Consulta preparada
+$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 $stmt->execute();
-$result = $stmt->get_result();
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc(); // Recupera a consulta e retorna como uma array
-    $nomeUsuario = htmlspecialchars($row["nome"] ?? ''); // Função é usada para prevenir ataques 
+if ($row) {
+    $nomeUsuario = htmlspecialchars($row["nome"] ?? ''); // Prevenção contra XSS
     $emailUsuario = htmlspecialchars($row["email"] ?? ''); 
     $avatarPath = htmlspecialchars($row["avatar"] ?? 'default-avatar.png'); 
 } else {
@@ -24,7 +23,6 @@ if ($result->num_rows > 0) {
     header("Location: login.php"); 
     exit();
 }
-$stmt->close();
 
 // Atualiza dados do usuário
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -35,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_FILES["avatar"]) && $_FILES["avatar"]["error"] == UPLOAD_ERR_OK) {
         $target_dir = "uploads/"; 
 
-        // Verifica se o diretório existe se não cria
+        // Verifica se o diretório existe, se não, cria
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0755, true); 
         }
@@ -47,8 +45,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $check = getimagesize($_FILES["avatar"]["tmp_name"]);
         if ($check !== false) {
             if (move_uploaded_file($_FILES["avatar"]["tmp_name"], $target_file)) {
-                $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, email = ?, avatar = ? WHERE id = ?");
-                $stmt->bind_param("sssi", $nome, $email, $target_file, $id);
+                $stmt = $conn->prepare("UPDATE usuarios SET nome = :nome, email = :email, avatar = :avatar WHERE id = :id");
+                $stmt->bindParam(":avatar", $target_file, PDO::PARAM_STR);
             } else {
                 echo "Erro ao fazer upload da imagem.";
             }
@@ -56,18 +54,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "O arquivo não é uma imagem.";
         }
     } else {
-    
-        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, email = ? WHERE id = ?");
-        $stmt->bind_param("ssi", $nome, $email, $id);
+        $stmt = $conn->prepare("UPDATE usuarios SET nome = :nome, email = :email WHERE id = :id");
     }
+
+    $stmt->bindParam(":nome", $nome, PDO::PARAM_STR);
+    $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
     if ($stmt->execute()) {
         header("Location: perfil.php"); 
         exit();
     } else {
-        echo "Erro ao atualizar: " . $stmt->error;
+        echo "Erro ao atualizar: " . implode(", ", $stmt->errorInfo());
     }
-    $stmt->close();
 }
 ?>
 
@@ -130,13 +129,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </a>
         </div>
 
-
         <div class="container">
-            
             <a href="excluir.php">
                 <button class="minhas-vendas-btn">Excluir Conta</button>
             </a>
-            
             <a href="logout.php">
                 <button class="minhas-vendas-btn">Sair</button>
             </a>
@@ -144,26 +140,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </body>
 <footer>
-            <div class="footer-top">
-                <div class="footer-top--left">
-                    <a href="#">Contato</a>
-                    <a href="#">Termos de Serviço</a>
-                    <a href="#">Política de Privacidade</a>
-                    <a href="#">Cancelamento, Troca e Reembolso</a>
-                </div>
-                </div>
-            </div>
+    <div class="footer-top">
+        <div class="footer-top--left">
+            <a href="#">Contato</a>
+            <a href="#">Termos de Serviço</a>
+            <a href="#">Política de Privacidade</a>
+            <a href="#">Cancelamento, Troca e Reembolso</a>
+        </div>
+    </div>
 
-            <div class="footer-bottom">
-                <div class="footer-bottom--left">
-                    <a href="#"><img class="footer-image" src="assets/imagens/instagram.png" alt=""></a>
-                    <a href="#"><img class="footer-image" src="assets/imagens/facebook.png" alt=""></a>
-                </div>
-                <div>
-                        &copy; 2025 FeiraGreen. Todos os direitos reservados.
-                </div>
-                <div class="footer-bottom--right">
-                </div>
-            </div>
-        </footer>
+    <div class="footer-bottom">
+        <div class="footer-bottom--left">
+            <a href="#"><img class="footer-image" src="assets/imagens/instagram.png" alt=""></a>
+            <a href="#"><img class="footer-image" src="assets/imagens/facebook.png" alt=""></a>
+        </div>
+        <div>
+            &copy; 2025 FeiraGreen. Todos os direitos reservados.
+        </div>
+        <div class="footer-bottom--right"></div>
+    </div>
+</footer>
 </html>
