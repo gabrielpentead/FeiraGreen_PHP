@@ -10,34 +10,6 @@ include("../Conexao/conexao.php");
 // Listando produtos
 $sql = "SELECT * FROM produtos";
 $result = $conn->query($sql);
-
-if (isset($_GET['id'])) {
-    $id_produto = $_GET['id'];
-
-    
-    $sql_check = "SELECT imagem FROM produtos WHERE id = '$id_produto'";
-    $check_result = $conn->query($sql_check);
-    
-    if ($check_result && $check_result->num_rows > 0) {
-        $row = $check_result->fetch_assoc();
-        
-        // Verifica se a imagem existe e a exclui
-        if (!empty($row["imagem"]) && file_exists("../Perfil/uploads/" . $row["imagem"])) {
-            unlink("../Perfil/uploads/" . $row["imagem"]);
-        }
-
-        // Excluir o produto do banco de dados
-        $sql_delete = "DELETE FROM produtos WHERE id = '$id_produto'";
-        if ($conn->query($sql_delete) === TRUE) {
-            header("Location: produtos.php"); 
-            exit();
-        } else {
-            echo "Erro ao excluir produto: " . $conn->error;
-        }
-    } else {
-        echo "Produto não encontrado.";
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -63,7 +35,7 @@ if (isset($_GET['id'])) {
     </div>
     <nav>
         <img src="../imagens/pesquisa.png" alt="" width="20">
-        <a href="/Perfil/perfil.php"><img src="../imagens/usuario.png" alt="" width="20"></a>
+        <a href="../Perfil/perfil.php"><img src="../imagens/usuario.png" alt="" width="20"></a>
         <a href=""><img src="../imagens/carrinho-carrinho.png" alt="" width="20"></a>
     </nav>
 </header>

@@ -9,14 +9,14 @@ include("../Conexao/conexao.php");
 
 $id = $_SESSION["id"];
 
-$stmt = $conn->prepare("SELECT * FROM usuarios WHERE id = ?");
+$stmt = $conn->prepare("SELECT * FROM usuarios WHERE id = ?"); //Consulta preparada
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $nomeUsuario = htmlspecialchars($row["nome"] ?? ''); 
+    $row = $result->fetch_assoc(); // Recupera a consulta e retorna como uma array
+    $nomeUsuario = htmlspecialchars($row["nome"] ?? ''); // Função é usada para prevenir ataques 
     $emailUsuario = htmlspecialchars($row["email"] ?? ''); 
     $avatarPath = htmlspecialchars($row["avatar"] ?? 'default-avatar.png'); 
 } else {
@@ -26,16 +26,16 @@ if ($result->num_rows > 0) {
 }
 $stmt->close();
 
-// Atualização de dados do usuário
+// Atualiza dados do usuário
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = $_POST["nome"];
     $email = $_POST["email"];
 
-    // Lógica para upload de imagem
+    // Upload de imagem
     if (isset($_FILES["avatar"]) && $_FILES["avatar"]["error"] == UPLOAD_ERR_OK) {
         $target_dir = "uploads/"; 
 
-        // Verifica se o diretório existe, se não, cria
+        // Verifica se o diretório existe se não cria
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0755, true); 
         }

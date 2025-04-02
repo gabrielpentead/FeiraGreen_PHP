@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Verifica se o email já está cadastrado
     $consulta = $conn->prepare("SELECT * FROM usuarios WHERE email = ?");
-    $consulta->bind_param("s", $email);
+    $consulta->bind_param("s", $email); // Associa o email a ? / o 'S' indica uma string
     $consulta->execute();
     $resultado = $consulta->get_result();
 
@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <img src="../imagens/LogoFeiraGreen.png" alt="Logo Feira Green">
             </div>
 
-            <!-- Exibe mensagem de erro aqui -->
+            <!-- Exibe mensagem de erro -->
             <?php if(!empty($erro)): ?>
                 <div class="error"><?= $erro ?></div>
             <?php endif; ?>

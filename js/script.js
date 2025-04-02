@@ -15,7 +15,7 @@ function nextItem() {
 // Muda o item a cada 5 segundos
 setInterval(nextItem, 5000);
 
-// Opcional: Adiciona botões de navegação
+// botões de navegação
 const prevButton = document.querySelector('.prev');
 const nextButton = document.querySelector('.next');
 
