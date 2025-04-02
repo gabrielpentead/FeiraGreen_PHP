@@ -37,8 +37,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($_FILES["imagem"]["name"])) {
         $imagem = $_FILES["imagem"];
         $imagemNome = uniqid() . "-" . basename($imagem["name"]);
-        $imagemDestino = "../Perfil/uploads/" . $imagemNome;
-
+        // Defina o mesmo caminho para upload e para exibição
+        $imagemDestino = "../Produtos/uploads/" . $imagemNome;
+        
+        if (!move_uploaded_file($imagem["tmp_name"], $imagemDestino)) {
+            echo "Falha ao enviar o arquivo.";
+            exit();
+        }
     }
     
     // Atualiza o produto no banco
@@ -82,16 +87,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
     <nav>
         <img src="../imagens/pesquisa.png" alt="" width="20">
-    <a href="/Perfil/perfil.php"><img src="../imagens/usuario.png" alt="" width="20"></a>
-    <a href=""><img src="../imagens/carrinho-carrinho.png" alt="" width="20"></a>
+        <a href="/Perfil/perfil.php"><img src="../imagens/usuario.png" alt="" width="20"></a>
+        <a href=""><img src="../imagens/carrinho-carrinho.png" alt="" width="20"></a>
     </nav>
 </header>
 <div class="line"></div>
 <body>
-    
-
 <div class="container">
-<h2>Editar Produto</h2>
+    <h2>Editar Produto</h2>
     <form action="editarproduto.php?id=<?php echo $id_produto; ?>" method="post" enctype="multipart/form-data">
         <label for="nome">Nome do Produto:</label>
         <input type="text" name="nome" value="<?php echo $row['nome']; ?>" required><br><br>
@@ -121,39 +124,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <a href="produtos.php">
             <button type="button">Cancelar</button>
         </a>
-        </form>
-    </div>
+    </form>
+</div>
 </body>
 <footer>
-            <div class="footer-top">
-                <div class="footer-top--left">
-                    <a href="#">Contato</a>
-                    <a href="#">Termos de Serviço</a>
-                    <a href="#">Política de Privacidade</a>
-                    <a href="#">Cancelamento, Troca e Reembolso</a>
-                </div>
-                <div class="footer-top--right">
-                    <span>Boletim de Notícias</span>
-                    <div class="footer-news-letter">
-                        <input class="footer-input" type="email" placeholder="Digite o seu e-mail">
-                        <button class="footer-button" type="button">Inscrever</button>
-                    </div>
-                </div>
+    <div class="footer-top">
+        <div class="footer-top--left">
+            <a href="#">Contato</a>
+            <a href="#">Termos de Serviço</a>
+            <a href="#">Política de Privacidade</a>
+            <a href="#">Cancelamento, Troca e Reembolso</a>
+        </div>
+        <div class="footer-top--right">
+            <span>Boletim de Notícias</span>
+            <div class="footer-news-letter">
+                <input class="footer-input" type="email" placeholder="Digite o seu e-mail">
+                <button class="footer-button" type="button">Inscrever</button>
             </div>
+        </div>
+    </div>
 
-            <div class="footer-bottom">
-                <div class="footer-bottom--left">
-                    <a href="#"><img class="footer-image" src="assets/imagens/instagram.png" alt=""></a>
-                    <a href="#"><img class="footer-image" src="assets/imagens/facebook.png" alt=""></a>
-                </div>
-                <div>
-                        &copy; 2024 FeiraGreen. Todos os direitos reservados.
-                </div>
-                <div class="footer-bottom--right">
-                    <img class="footer-image" src="assets/imagens/mastercard.png" alt="">
-                    <img class="footer-image" src="assets/imagens/paypal.png" alt="">
-                    <img class="footer-image" src="assets/imagens/visa.png" alt="">
-                </div>
-            </div>
-        </footer>
+    <div class="footer-bottom">
+        <div class="footer-bottom--left">
+            <a href="#"><img class="footer-image" src="assets/imagens/instagram.png" alt=""></a>
+            <a href="#"><img class="footer-image" src="assets/imagens/facebook.png" alt=""></a>
+        </div>
+        <div>
+            &copy; 2024 FeiraGreen. Todos os direitos reservados.
+        </div>
+        <div class="footer-bottom--right">
+            <img class="footer-image" src="assets/imagens/mastercard.png" alt="">
+            <img class="footer-image" src="assets/imagens/paypal.png" alt="">
+            <img class="footer-image" src="assets/imagens/visa.png" alt="">
+        </div>
+    </div>
+</footer>
 </html>
